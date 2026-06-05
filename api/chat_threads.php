@@ -105,8 +105,33 @@ try {
                 'unread_count' => unread_chat_count(null, (int)$user['id'], (int)$admin['id']),
             ];
         }
+    } elseif ($user['role'] === 'customer') {
+        $stmt = db()->prepare(
+            "SELECT rr.id request_id, rr.status, a.name appliance_name, t.id technician_id, t.name technician_name
+             FROM repair_requests rr
+             JOIN appliances a ON a.id = rr.appliance_id
+             LEFT JOIN users t ON t.id = rr.technician_id
+             WHERE rr.customer_id = ?
+             ORDER BY rr.created_at DESC"
+        );
+        $stmt->execute([$user['id']]);
+        foreach ($stmt->fetchAll() as $row) {
+            if (empty($row['technician_id'])) continue; // no chat until a technician is assigned
+            $last = last_chat_message((int)$row['request_id'], (int)$user['id'], (int)$row['technician_id']);
+            $threads[] = [
+                'id' => 'request-' . $row['request_id'],
+                'title' => $row['technician_name'] ?? 'Technician',
+                'subtitle' => $row['appliance_name'] . ' - ' . str_replace('_', ' ', $row['status']),
+                'request_id' => $row['request_id'],
+                'recipient_id' => $row['technician_id'],
+                'recipient_role' => 'technician',
+                'last_message' => $last['message'],
+                'last_message_at' => $last['created_at'],
+                'unread_count' => unread_chat_count((int)$row['request_id'], (int)$user['id'], (int)$row['technician_id']),
+            ];
+        }
     } else {
-        fail('Chat threads are currently available for technicians.', 403);
+        fail('Chat threads are currently available for technicians and customers with assigned technicians.', 403);
     }
 
     usort($threads, function (array $a, array $b): int {
