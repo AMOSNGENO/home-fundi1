@@ -1,5 +1,5 @@
 class Appliance {
-  final int id;
+  final String id;
   final String name;
   final String? category;
   final String? description;
@@ -14,10 +14,18 @@ class Appliance {
   });
 
   factory Appliance.fromJson(Map<String, dynamic> json) => Appliance(
-    id: int.parse('${json['id']}'),
+    id: '${json['id'] ?? ''}',
     name: '${json['name'] ?? ''}',
     category: json['category']?.toString(),
     description: json['description']?.toString(),
     imageUrl: json['image_url']?.toString(),
   );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'category': category,
+    'description': description,
+    'image_url': imageUrl,
+  };
 }

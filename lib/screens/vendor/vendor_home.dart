@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/app_widgets.dart';
 import '../../widgets/role_guard.dart';
 import '../profile_screen.dart';
 
@@ -54,7 +55,12 @@ class VendorDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Vendor Dashboard')),
+      appBar: AppBar(
+        title: const Text('Vendor Dashboard'),
+        actions: const [
+          NotificationBellButton(color: Colors.white),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: const [
@@ -82,7 +88,12 @@ class VendorOrdersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Vendor Orders')),
+      appBar: AppBar(
+        title: const Text('Vendor Orders'),
+        actions: const [
+          NotificationBellButton(color: Colors.white),
+        ],
+      ),
       body: const Center(child: Text('Vendor orders will appear here.')),
     );
   }

@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../utils/helpers.dart';
+import 'technician_job_detail.dart';
+import '../../widgets/app_widgets.dart';
 
 class MyJobsScreen extends StatefulWidget {
   const MyJobsScreen({super.key});
@@ -31,6 +33,9 @@ class _MyJobsScreenState extends State<MyJobsScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('My Jobs'),
+          actions: const [
+            NotificationBellButton(color: Colors.white),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Active'),
@@ -75,6 +80,14 @@ class _MyJobsScreenState extends State<MyJobsScreen> {
             ),
             isThreeLine: true,
             trailing: Text(money(job.actualCost ?? job.estimatedCost ?? 0)),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => TechnicianJobDetailScreen(
+                  job: job,
+                  onChanged: _load,
+                ),
+              ),
+            ),
           ),
         );
       },

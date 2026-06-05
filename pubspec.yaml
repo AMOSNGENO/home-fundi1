@@ -38,6 +38,10 @@ dependencies:
   intl: ^0.20.2
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
+  google_maps_flutter: ^2.17.1
+  geocoding: ^4.0.0
+  image_picker: ^1.2.1
+  flutter_local_notifications: ^18.0.1
 
 dev_dependencies:
   flutter_test:
@@ -49,6 +53,14 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/homefundi_logo.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/homefundi_logo.png
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -63,6 +75,8 @@ flutter:
 
   assets:
     - assets/home_fundi_cover.png
+    - assets/homefundi_logo.png
+    - assets/config.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -94,3 +108,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+

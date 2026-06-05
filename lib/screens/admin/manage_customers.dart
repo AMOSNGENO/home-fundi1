@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../models/user.dart';
-import '../../services/api_service.dart';
+import '../../services/php_api_service.dart';
 import '../../utils/helpers.dart';
+import '../../widgets/app_widgets.dart';
 
 class ManageCustomersScreen extends StatefulWidget {
   const ManageCustomersScreen({super.key});
@@ -12,6 +13,7 @@ class ManageCustomersScreen extends StatefulWidget {
 }
 
 class _ManageCustomersScreenState extends State<ManageCustomersScreen> {
+  final _service = PhpApiService();
   List<AppUser> _customers = [];
 
   @override
@@ -21,21 +23,19 @@ class _ManageCustomersScreenState extends State<ManageCustomersScreen> {
   }
 
   Future<void> _load() async {
-    final data = await ApiService.get(
-      'admin/users.php',
-      query: {'role': 'customer'},
-    );
-    setState(
-      () => _customers = (data['users'] as List)
-          .map((item) => AppUser.fromJson(item))
-          .toList(),
-    );
+    final customers = await _service.users(role: 'customer');
+    setState(() => _customers = customers);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Customers')),
+      appBar: AppBar(
+        title: const Text('Manage Customers'),
+        actions: const [
+          NotificationBellButton(color: Colors.white),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView.builder(
@@ -60,11 +60,11 @@ class _ManageCustomersScreenState extends State<ManageCustomersScreen> {
     );
   }
 
-  Future<void> _delete(int id) async {
+  Future<void> _delete(String id) async {
     try {
-      await ApiService.delete('admin/delete_user.php', {'user_id': id});
+      await _service.deleteUser(id);
       await _load();
-    } on ApiException catch (error) {
+    } on PhpApiException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     }
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
-import '../services/api_service.dart';
+import '../services/php_api_service.dart';
 import '../utils/helpers.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -19,8 +19,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _password = TextEditingController();
   final _phone = TextEditingController();
   final _address = TextEditingController();
-  final _skills = TextEditingController();
-  String _role = 'customer';
 
   @override
   Widget build(BuildContext context) {
@@ -33,22 +31,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             key: _formKey,
             child: Column(
               children: [
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 'customer',
-                      label: Text('Customer'),
-                      icon: Icon(Icons.person),
-                    ),
-                    ButtonSegment(
-                      value: 'technician',
-                      label: Text('Technician'),
-                      icon: Icon(Icons.engineering),
-                    ),
-                  ],
-                  selected: {_role},
-                  onSelectionChanged: (value) =>
-                      setState(() => _role = value.first),
+                const ListTile(
+                  leading: Icon(Icons.person_add_alt),
+                  title: Text('Create customer account'),
+                  subtitle: Text('Technician accounts are created by admins.'),
                 ),
                 const SizedBox(height: 16),
                 _field(_name, 'Full name', Icons.badge_outlined),
@@ -66,22 +52,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Icons.location_on_outlined,
                   maxLines: 2,
                 ),
-                if (_role == 'technician')
-                  _field(
-                    _skills,
-                    'Skills, for example fridge, cooker, washer',
-                    Icons.handyman_outlined,
-                    maxLines: 2,
-                  ),
                 const SizedBox(height: 18),
                 FilledButton.icon(
                   onPressed: _register,
                   icon: const Icon(Icons.person_add_alt),
-                  label: Text(
-                    _role == 'technician'
-                        ? 'Register for approval'
-                        : 'Register',
-                  ),
+                  label: const Text('Register customer'),
                 ),
               ],
             ),
@@ -122,17 +97,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'password': _password.text,
         'phone': _phone.text.trim(),
         'address': _address.text.trim(),
-        'role': _role,
-        'skills': _skills.text.trim(),
       });
-      if (mounted && _role == 'technician') {
-        showToast(
-          context,
-          'Registered. Your technician account is pending admin approval.',
-        );
-      }
       if (mounted) Navigator.of(context).pop();
-    } on ApiException catch (error) {
+    } on PhpApiException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     }
   }

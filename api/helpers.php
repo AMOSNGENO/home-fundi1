@@ -85,8 +85,37 @@ function require_fields(array $data, array $fields): void {
     }
 }
 
+function save_base64_upload(?string $data, ?string $name, string $folder): ?string {
+    if (!$data || trim($data) === '') {
+        return null;
+    }
+    if (strpos($data, ',') !== false) {
+        $data = substr($data, strpos($data, ',') + 1);
+    }
+    $binary = base64_decode($data, true);
+    if ($binary === false || strlen($binary) > 5 * 1024 * 1024) {
+        fail('Image must be a valid file up to 5MB.', 400);
+    }
+    $extension = strtolower(pathinfo((string)$name, PATHINFO_EXTENSION));
+    if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+        $extension = 'jpg';
+    }
+    $root = __DIR__ . '/uploads/' . trim($folder, '/');
+    if (!is_dir($root) && !mkdir($root, 0775, true) && !is_dir($root)) {
+        fail('Could not prepare upload folder.', 500);
+    }
+    $filename = bin2hex(random_bytes(12)) . '.' . $extension;
+    $path = $root . '/' . $filename;
+    if (file_put_contents($path, $binary) === false) {
+        fail('Could not save image.', 500);
+    }
+    return 'uploads/' . trim($folder, '/') . '/' . $filename;
+}
+
 function request_rows(string $where = '', array $params = []): array {
-    $sql = "SELECT rr.*, a.name appliance_name, c.name customer_name, t.name technician_name
+    $sql = "SELECT rr.*, a.name appliance_name,
+                   c.name customer_name, c.email customer_email, c.phone customer_phone,
+                   t.name technician_name
             FROM repair_requests rr
             JOIN appliances a ON a.id = rr.appliance_id
             JOIN users c ON c.id = rr.customer_id
@@ -98,6 +127,18 @@ function request_rows(string $where = '', array $params = []): array {
 }
 
 function notify_user(int $userId, string $title, string $message): void {
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS notifications (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            title VARCHAR(100),
+            message TEXT,
+            is_read BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            INDEX idx_notifications_user_read (user_id, is_read, created_at)
+        )'
+    );
     $stmt = db()->prepare('INSERT INTO notifications (user_id, title, message) VALUES (?, ?, ?)');
     $stmt->execute([$userId, $title, $message]);
 }

@@ -6,6 +6,10 @@ const DB_NAME = 'home_fundi';
 const DB_USER = 'root';
 const DB_PASS = '';
 
+const PASSWORD_RESET_TOKEN_MINUTES = 30;
+const PASSWORD_RESET_DEV_MODE = true;
+const PASSWORD_RESET_FROM_EMAIL = '';
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo instanceof PDO) {

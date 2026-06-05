@@ -1,91 +1,109 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../utils/constants.dart';
+import 'api_config.dart';
 
 class ApiException implements Exception {
   final String message;
-  final int statusCode;
 
-  const ApiException(this.message, this.statusCode);
+  const ApiException(this.message);
 
   @override
   String toString() => message;
 }
 
 class ApiService {
-  static String baseUrl = AppConstants.baseUrl;
-  static String? authToken;
+  ApiService({http.Client? client}) : _client = client ?? http.Client();
 
-  static Uri _uri(String path, [Map<String, String>? query]) {
-    final root = baseUrl.endsWith('/')
-        ? baseUrl.substring(0, baseUrl.length - 1)
-        : baseUrl;
-    return Uri.parse('$root/$path').replace(queryParameters: query);
-  }
+  static const _tokenKey = 'home_fundi_api_token';
+  static String get baseUrl => ApiConfig.baseUrl;
 
-  static Map<String, String> _headers() => {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    if (authToken != null) 'Authorization': 'Bearer $authToken',
-  };
+  final http.Client _client;
 
-  static Future<dynamic> get(String path, {Map<String, String>? query}) async {
-    final response = await http.get(_uri(path, query), headers: _headers());
-    return _decode(response);
-  }
-
-  static Future<dynamic> post(String path, Map<String, dynamic> body) async {
-    final response = await http.post(
-      _uri(path),
-      headers: _headers(),
-      body: jsonEncode(body),
+  Future<Map<String, dynamic>> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    bool authenticated = true,
+  }) {
+    return _request(
+      path,
+      queryParameters: queryParameters,
+      authenticated: authenticated,
     );
-    return _decode(response);
   }
 
-  static Future<dynamic> put(String path, Map<String, dynamic> body) async {
-    final response = await http.put(
-      _uri(path),
-      headers: _headers(),
-      body: jsonEncode(body),
+  Future<Map<String, dynamic>> post(
+    String path,
+    Map<String, dynamic> data, {
+    Map<String, dynamic>? queryParameters,
+    bool authenticated = true,
+  }) {
+    return _request(
+      path,
+      method: 'POST',
+      payload: data,
+      queryParameters: queryParameters,
+      authenticated: authenticated,
     );
-    return _decode(response);
   }
 
-  static Future<dynamic> delete(String path, Map<String, dynamic> body) async {
-    final request = http.Request('DELETE', _uri(path))
-      ..headers.addAll(_headers())
-      ..body = jsonEncode(body);
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
-    return _decode(response);
-  }
+  Future<Map<String, dynamic>> _request(
+    String path, {
+    String method = 'GET',
+    Map<String, dynamic>? payload,
+    Map<String, dynamic>? queryParameters,
+    bool authenticated = true,
+  }) async {
+    final normalized = path.trim().replaceAll(RegExp(r'^/+'), '');
+    final uri = Uri.parse('$baseUrl/$normalized').replace(
+      queryParameters: queryParameters?.map(
+        (key, value) => MapEntry(key, '$value'),
+      ),
+    );
+    final headers = <String, String>{'Content-Type': 'application/json'};
 
-  static dynamic _decode(http.Response response) {
-    final decoded = response.body.isEmpty
-        ? <String, dynamic>{}
-        : jsonDecode(response.body);
-    if (decoded is Map<String, dynamic> && decoded.containsKey('success')) {
-      if (response.statusCode < 200 ||
-          response.statusCode >= 300 ||
-          decoded['success'] != true) {
-        throw ApiException(
-          decoded['message']?.toString() ?? 'Request failed',
-          response.statusCode,
-        );
+    if (authenticated) {
+      final token = (await SharedPreferences.getInstance()).getString(_tokenKey);
+      if (token == null || token.isEmpty) {
+        throw const ApiException('Please log in first.');
       }
-      return decoded;
+      headers['Authorization'] = 'Bearer $token';
     }
-    if (response.statusCode < 200 ||
-        response.statusCode >= 300 ||
-        decoded['status'] == 'error') {
-      throw ApiException(
-        decoded['message']?.toString() ?? 'Request failed',
-        response.statusCode,
-      );
+
+    late http.Response response;
+    try {
+      response = method == 'POST'
+          ? await _client.post(
+              uri,
+              headers: headers,
+              body: jsonEncode(payload ?? const {}),
+            )
+          : await _client.get(uri, headers: headers);
+    } catch (error) {
+      throw ApiException('Could not reach the API at $baseUrl. $error');
     }
-    return decoded['data'];
+
+    final decoded = _decode(response.body);
+    final ok =
+        response.statusCode >= 200 &&
+        response.statusCode < 300 &&
+        decoded['status'] != 'error' &&
+        decoded['success'] != false;
+    if (!ok) {
+      throw ApiException('${decoded['message'] ?? 'API request failed.'}');
+    }
+    return decoded;
+  }
+
+  Map<String, dynamic> _decode(String body) {
+    if (body.trim().isEmpty) return <String, dynamic>{};
+    final decoded = jsonDecode(body);
+    if (decoded is Map<String, dynamic>) return decoded;
+    if (decoded is Map) {
+      return decoded.map((key, value) => MapEntry('$key', value));
+    }
+    throw const ApiException('API returned an invalid response.');
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/rating.dart';
-import '../../services/api_service.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/php_api_service.dart';
 
 class MyRatingsScreen extends StatefulWidget {
   const MyRatingsScreen({super.key});
@@ -11,6 +13,7 @@ class MyRatingsScreen extends StatefulWidget {
 }
 
 class _MyRatingsScreenState extends State<MyRatingsScreen> {
+  final _service = PhpApiService();
   double _average = 0;
   List<RatingReview> _ratings = [];
 
@@ -21,12 +24,14 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
   }
 
   Future<void> _load() async {
-    final data = await ApiService.get('my_ratings.php');
+    final technicianId = context.read<AuthProvider>().user!.id;
+    final ratings = await _service.technicianRatings(technicianId);
     setState(() {
-      _average = double.tryParse('${data['average'] ?? 0}') ?? 0;
-      _ratings = (data['ratings'] as List)
-          .map((item) => RatingReview.fromJson(item))
-          .toList();
+      _ratings = ratings;
+      _average = _ratings.isEmpty
+          ? 0
+          : _ratings.fold<int>(0, (sum, item) => sum + item.rating) /
+                _ratings.length;
     });
   }
 

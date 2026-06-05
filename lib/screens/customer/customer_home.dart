@@ -4,8 +4,9 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../login_screen.dart';
 import '../profile_screen.dart';
+import 'customer_dashboard.dart';
+import 'find_technicians.dart';
 import 'my_requests.dart';
-import 'post_request.dart';
 import 'track_request.dart';
 
 class CustomerHome extends StatefulWidget {
@@ -16,13 +17,14 @@ class CustomerHome extends StatefulWidget {
 }
 
 class _CustomerHomeState extends State<CustomerHome> {
-  int _index = 0;
+  int _index = 1;
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final pages = [
-      const PostRequestScreen(),
+      const CustomerDashboardScreen(),
+      const FindTechniciansScreen(),
       const MyRequestsScreen(),
       const TrackRequestScreen(),
       const ProfileScreen(),
@@ -34,16 +36,20 @@ class _CustomerHomeState extends State<CustomerHome> {
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: [
           const NavigationDestination(
-            icon: Icon(Icons.add_home_work_outlined),
+            icon: Icon(Icons.home_outlined),
             label: 'Home',
           ),
           const NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
+            icon: Icon(Icons.grid_view),
+            label: 'Get Fundi',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.groups_outlined),
             label: 'Requests',
           ),
           const NavigationDestination(
-            icon: Icon(Icons.timeline_outlined),
-            label: 'Track',
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'Chats',
           ),
           NavigationDestination(
             icon: Icon(

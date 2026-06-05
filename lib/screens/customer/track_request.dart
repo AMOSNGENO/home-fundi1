@@ -5,8 +5,10 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/request_provider.dart';
+import '../../services/php_api_service.dart';
 import '../../utils/constants.dart';
 import '../../utils/helpers.dart';
+import '../../widgets/app_widgets.dart';
 
 class TrackRequestScreen extends StatefulWidget {
   const TrackRequestScreen({super.key});
@@ -35,7 +37,12 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
         .toList();
     final request = active.isEmpty ? null : active.first;
     return Scaffold(
-      appBar: AppBar(title: const Text('Track Request')),
+      appBar: AppBar(
+        title: const Text('Track Request'),
+        actions: const [
+          NotificationBellButton(color: Colors.white),
+        ],
+      ),
       body: request == null
           ? const Center(child: Text('No active request to track.'))
           : ListView(
@@ -47,6 +54,29 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(request.description),
+                if (request.requestImageUrl != null &&
+                    request.requestImageUrl!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      PhpApiService.mediaUrl(request.requestImageUrl),
+                      height: 190,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ],
+                if (request.estimatedCost != null &&
+                    request.estimatedCost!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.payments_outlined),
+                    title: Text(money(request.estimatedCost)),
+                    subtitle: const Text('Quoted price'),
+                  ),
+                ],
                 if (request.technicianName != null) ...[
                   const SizedBox(height: 12),
                   ListTile(
@@ -70,7 +100,7 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                             request.latitude!,
                             request.longitude!,
                           ),
-                          initialZoom: 14,
+                          initialZoom: 15,
                         ),
                         children: [
                           TileLayer(
@@ -86,28 +116,14 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                                   request.latitude!,
                                   request.longitude!,
                                 ),
-                                width: 48,
-                                height: 48,
+                                width: 44,
+                                height: 44,
                                 child: const Icon(
-                                  Icons.location_on,
-                                  size: 44,
-                                  color: Colors.red,
+                                  Icons.location_pin,
+                                  color: Color(0xFFFF2E2E),
+                                  size: 42,
                                 ),
                               ),
-                              if (request.technicianName != null)
-                                Marker(
-                                  point: LatLng(
-                                    request.latitude! + 0.006,
-                                    request.longitude! + 0.006,
-                                  ),
-                                  width: 48,
-                                  height: 48,
-                                  child: const Icon(
-                                    Icons.build_circle,
-                                    size: 40,
-                                    color: Colors.blue,
-                                  ),
-                                ),
                             ],
                           ),
                         ],

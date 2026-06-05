@@ -7,6 +7,7 @@ class AuthProvider extends ChangeNotifier {
   final _service = AuthService();
   AppUser? user;
   bool isLoading = true;
+  bool hasLoadedSession = false;
 
   bool get isLoggedIn => user != null;
 
@@ -16,6 +17,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       user = await _service.loadUser();
     } finally {
+      hasLoadedSession = true;
       isLoading = false;
       notifyListeners();
     }
@@ -47,5 +49,34 @@ class AuthProvider extends ChangeNotifier {
     await _service.logout();
     user = null;
     notifyListeners();
+  }
+
+  Future<String> sendPasswordReset(String email) {
+    return _service.sendPasswordReset(email);
+  }
+
+  Future<void> updateTechnicianProfile({
+    required String email,
+    required String phone,
+    String? address,
+    String? skills,
+    String? profileImageData,
+    String? profileImageName,
+  }) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      user = await _service.updateTechnicianProfile(
+        email: email,
+        phone: phone,
+        address: address,
+        skills: skills,
+        profileImageData: profileImageData,
+        profileImageName: profileImageName,
+      );
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }

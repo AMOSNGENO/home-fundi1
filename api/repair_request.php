@@ -23,8 +23,9 @@ try {
     ");
     $technician = $techStmt->fetch() ?: null;
     $status = $technician ? 'accepted' : 'pending';
+    $requestImageUrl = save_base64_upload($data['request_image_data'] ?? null, $data['request_image_name'] ?? null, 'requests');
 
-    $stmt = db()->prepare('INSERT INTO repair_requests (customer_id, technician_id, appliance_id, description, preferred_date, preferred_time, address, latitude, longitude, status, estimated_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt = db()->prepare('INSERT INTO repair_requests (customer_id, technician_id, appliance_id, description, preferred_date, preferred_time, address, latitude, longitude, status, estimated_cost, request_image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute([
         $user['id'],
         $technician['id'] ?? null,
@@ -36,7 +37,8 @@ try {
         $data['latitude'] ?? null,
         $data['longitude'] ?? null,
         $status,
-        $data['estimated_cost'] ?? null
+        $data['estimated_cost'] ?? null,
+        $requestImageUrl
     ]);
     $id = (int)db()->lastInsertId();
 

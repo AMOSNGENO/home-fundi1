@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/repair_request.dart';
-import '../../services/api_service.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/php_api_service.dart';
 import '../../utils/helpers.dart';
+import '../../widgets/app_widgets.dart';
+import 'technician_job_detail.dart';
 
 class AvailableJobsScreen extends StatefulWidget {
   const AvailableJobsScreen({super.key});
@@ -12,6 +16,7 @@ class AvailableJobsScreen extends StatefulWidget {
 }
 
 class _AvailableJobsScreenState extends State<AvailableJobsScreen> {
+  final _service = PhpApiService();
   List<RepairRequest> _jobs = [];
   bool _loading = true;
 
@@ -24,10 +29,7 @@ class _AvailableJobsScreenState extends State<AvailableJobsScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final data = await ApiService.get('available_jobs.php');
-      _jobs = (data['jobs'] as List)
-          .map((item) => RepairRequest.fromJson(item))
-          .toList();
+      _jobs = await _service.availableJobs();
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -36,7 +38,12 @@ class _AvailableJobsScreenState extends State<AvailableJobsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Available Jobs')),
+      appBar: AppBar(
+        title: const Text('Available Jobs'),
+        actions: const [
+          NotificationBellButton(color: Colors.white),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -48,15 +55,37 @@ class _AvailableJobsScreenState extends State<AvailableJobsScreen> {
                   final job = _jobs[index];
                   return Card(
                     child: ListTile(
+                      leading: job.requestImageUrl == null ||
+                              job.requestImageUrl!.isEmpty
+                          ? null
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.network(
+                                PhpApiService.mediaUrl(job.requestImageUrl),
+                                width: 56,
+                                height: 56,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                       title: Text(job.applianceName),
                       subtitle: Text(
-                        '${job.address}\n${job.description}',
+                        '${job.address}'
+                        '${job.estimatedCost == null || job.estimatedCost!.isEmpty ? '' : '\nQuote: ${money(job.estimatedCost)}'}'
+                        '\n${job.description}',
                         maxLines: 3,
                       ),
                       isThreeLine: true,
                       trailing: FilledButton(
                         onPressed: () => _accept(job.id),
                         child: const Text('Accept'),
+                      ),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TechnicianJobDetailScreen(
+                            job: job,
+                            onChanged: _load,
+                          ),
+                        ),
                       ),
                     ),
                   );
@@ -66,12 +95,13 @@ class _AvailableJobsScreenState extends State<AvailableJobsScreen> {
     );
   }
 
-  Future<void> _accept(int requestId) async {
+  Future<void> _accept(String requestId) async {
     try {
-      await ApiService.post('accept_job.php', {'request_id': requestId});
+      final technician = context.read<AuthProvider>().user!;
+      await _service.acceptJob(requestId, technician);
       await _load();
       if (mounted) showToast(context, 'Job accepted.');
-    } on ApiException catch (error) {
+    } on PhpApiException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     }
   }

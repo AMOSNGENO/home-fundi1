@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../models/repair_request.dart';
-import '../../services/api_service.dart';
+import '../../services/php_api_service.dart';
 import '../../utils/helpers.dart';
+import '../../widgets/app_widgets.dart';
 
 class AllRequestsScreen extends StatefulWidget {
   const AllRequestsScreen({super.key});
@@ -12,6 +13,7 @@ class AllRequestsScreen extends StatefulWidget {
 }
 
 class _AllRequestsScreenState extends State<AllRequestsScreen> {
+  final _service = PhpApiService();
   List<RepairRequest> _requests = [];
   String? _status;
 
@@ -22,21 +24,19 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
   }
 
   Future<void> _load() async {
-    final data = await ApiService.get(
-      'admin/repair_requests.php',
-      query: _status == null ? null : {'status': _status!},
-    );
-    setState(
-      () => _requests = (data['requests'] as List)
-          .map((item) => RepairRequest.fromJson(item))
-          .toList(),
-    );
+    final requests = await _service.allRequests(status: _status);
+    setState(() => _requests = requests);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('All Repair Requests')),
+      appBar: AppBar(
+        title: const Text('All Repair Requests'),
+        actions: const [
+          NotificationBellButton(color: Colors.white),
+        ],
+      ),
       body: Column(
         children: [
           Padding(

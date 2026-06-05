@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/repair_request.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/api_service.dart';
+import '../../services/php_api_service.dart';
 import '../../utils/helpers.dart';
 
 class RateTechnicianScreen extends StatefulWidget {
@@ -15,6 +15,7 @@ class RateTechnicianScreen extends StatefulWidget {
 }
 
 class _RateTechnicianScreenState extends State<RateTechnicianScreen> {
+  final _service = PhpApiService();
   int _rating = 5;
   final _review = TextEditingController();
 
@@ -56,18 +57,17 @@ class _RateTechnicianScreenState extends State<RateTechnicianScreen> {
   Future<void> _submit() async {
     try {
       final user = context.read<AuthProvider>().user!;
-      await ApiService.post('add_rating.php', {
-        'repair_request_id': widget.request.id,
-        'customer_id': user.id,
-        'technician_id': widget.request.technicianId,
-        'rating': _rating,
-        'review': _review.text.trim(),
-      });
+      await _service.addRating(
+        request: widget.request,
+        customer: user,
+        rating: _rating,
+        review: _review.text.trim(),
+      );
       if (mounted) {
         showToast(context, 'Rating submitted.');
         Navigator.of(context).pop();
       }
-    } on ApiException catch (error) {
+    } on PhpApiException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     }
   }

@@ -1,5 +1,5 @@
 class AppUser {
-  final int id;
+  final String id;
   final String name;
   final String email;
   final String phone;
@@ -10,8 +10,6 @@ class AppUser {
   final String? profileImage;
   final String? skills;
   final bool isAvailable;
-  final String? token;
-  final String? tokenExpiresAt;
 
   const AppUser({
     required this.id,
@@ -25,32 +23,33 @@ class AppUser {
     this.profileImage,
     this.skills,
     required this.isAvailable,
-    this.token,
-    this.tokenExpiresAt,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
+    final role = '${json['role'] ?? 'customer'}'.toLowerCase();
     return AppUser(
-      id: int.parse('${json['id']}'),
+      id: '${json['id'] ?? json['uid'] ?? ''}',
       name: '${json['name'] ?? json['fullname'] ?? ''}',
       email: '${json['email'] ?? ''}',
       phone: '${json['phone'] ?? ''}',
       address: json['address']?.toString(),
-      role: '${json['role'] ?? 'customer'}'.toLowerCase(),
+      role: role,
       accountStatus: '${json['account_status'] ?? 'active'}'.toLowerCase(),
       isApproved:
           json['is_approved'] == true ||
           json['is_approved'] == 1 ||
-          json['is_approved'] == '1',
+          json['is_approved'] == '1' ||
+          json['isApproved'] == true ||
+          role != 'technician',
       profileImage: json['profile_image']?.toString(),
       skills: json['skills']?.toString(),
       isAvailable:
           json['is_available'] == null ||
           json['is_available'] == true ||
           json['is_available'] == 1 ||
-          json['is_available'] == '1',
-      token: json['token']?.toString() ?? json['api_token']?.toString(),
-      tokenExpiresAt: json['token_expires_at']?.toString(),
+          json['is_available'] == '1' ||
+          json['isAvailable'] == true ||
+          json['isActive'] == true,
     );
   }
 
@@ -62,11 +61,10 @@ class AppUser {
     'address': address,
     'role': role,
     'account_status': accountStatus,
-    'is_approved': isApproved ? 1 : 0,
+    'is_approved': isApproved,
     'profile_image': profileImage,
     'skills': skills,
-    'is_available': isAvailable ? 1 : 0,
-    'token': token,
-    'token_expires_at': tokenExpiresAt,
+    'is_available': isAvailable,
+    'isActive': isAvailable,
   };
 }

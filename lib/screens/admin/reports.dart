@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../services/api_service.dart';
+import '../../services/php_api_service.dart';
 import '../../utils/helpers.dart';
+import '../../widgets/app_widgets.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -11,6 +12,7 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
+  final _service = PhpApiService();
   Map<String, dynamic> _report = {};
 
   @override
@@ -20,7 +22,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Future<void> _load() async {
-    final data = await ApiService.get('admin/reports.php');
+    final data = await _service.reports();
     setState(() => _report = data);
   }
 
@@ -30,6 +32,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       appBar: AppBar(
         title: const Text('Reports'),
         actions: [
+          const NotificationBellButton(color: Colors.white),
           IconButton(
             tooltip: 'Refresh',
             icon: const Icon(Icons.refresh),
@@ -61,7 +64,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           FilledButton.icon(
             onPressed: () => showToast(
               context,
-              'Export endpoint is ready for server-side PDF/Excel generation.',
+              'Export can be added with a server-side report endpoint.',
             ),
             icon: const Icon(Icons.download),
             label: const Text('Export report'),

@@ -39,32 +39,32 @@ class _AdminHomeState extends State<AdminHome> {
           onDestinationSelected: (value) => setState(() => _index = value),
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              label: 'Stats',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.engineering_outlined),
-              label: 'Techs',
+              icon: Icon(Icons.home_rounded),
+              label: 'Dashboard',
             ),
             NavigationDestination(
               icon: Icon(Icons.groups_outlined),
+              label: 'Fundis',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.people_alt_outlined),
               label: 'Users',
             ),
             NavigationDestination(
-              icon: Icon(Icons.kitchen_outlined),
-              label: 'Items',
+              icon: Icon(Icons.category_outlined),
+              label: 'Categories',
             ),
             NavigationDestination(
-              icon: Icon(Icons.list_alt_outlined),
-              label: 'Requests',
+              icon: Icon(Icons.assignment_outlined),
+              label: 'Jobs',
             ),
             NavigationDestination(
-              icon: Icon(Icons.bar_chart_outlined),
-              label: 'Reports',
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              label: 'Finance',
             ),
             NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              label: 'Profile',
+              icon: Icon(Icons.grid_view),
+              label: 'More',
             ),
           ],
         ),

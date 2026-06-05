@@ -4,8 +4,8 @@ import '../../widgets/role_guard.dart';
 import '../profile_screen.dart';
 import 'available_jobs.dart';
 import 'my_jobs.dart';
-import 'my_ratings.dart';
-import 'update_status.dart';
+import 'technician_chats.dart';
+import 'technician_dashboard.dart';
 
 class TechnicianHome extends StatefulWidget {
   const TechnicianHome({super.key});
@@ -20,10 +20,10 @@ class _TechnicianHomeState extends State<TechnicianHome> {
   @override
   Widget build(BuildContext context) {
     final pages = const [
+      TechnicianDashboardScreen(),
       AvailableJobsScreen(),
       MyJobsScreen(),
-      UpdateStatusScreen(),
-      MyRatingsScreen(),
+      TechnicianChatsScreen(),
       ProfileScreen(),
     ];
     return RoleGuard(
@@ -35,17 +35,20 @@ class _TechnicianHomeState extends State<TechnicianHome> {
           onDestinationSelected: (value) => setState(() => _index = value),
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.work_outline),
-              label: 'Jobs',
+              icon: Icon(Icons.home_rounded),
+              label: 'Dashboard',
             ),
             NavigationDestination(
               icon: Icon(Icons.assignment_outlined),
-              label: 'Mine',
+              label: 'Find Jobs',
             ),
-            NavigationDestination(icon: Icon(Icons.update), label: 'Status'),
             NavigationDestination(
-              icon: Icon(Icons.star_outline),
-              label: 'Ratings',
+              icon: Icon(Icons.work_outline),
+              label: 'My Jobs',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.chat_bubble_outline),
+              label: 'Chats',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline),

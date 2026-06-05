@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../models/user.dart';
-import '../../services/api_service.dart';
+import '../../services/php_api_service.dart';
 import '../../utils/helpers.dart';
+import '../../widgets/app_widgets.dart';
 
 class ManageTechniciansScreen extends StatefulWidget {
   const ManageTechniciansScreen({super.key});
@@ -13,6 +14,7 @@ class ManageTechniciansScreen extends StatefulWidget {
 }
 
 class _ManageTechniciansScreenState extends State<ManageTechniciansScreen> {
+  final _service = PhpApiService();
   List<AppUser> _techs = [];
 
   @override
@@ -22,21 +24,24 @@ class _ManageTechniciansScreenState extends State<ManageTechniciansScreen> {
   }
 
   Future<void> _load() async {
-    final data = await ApiService.get(
-      'admin/users.php',
-      query: {'role': 'technician'},
-    );
-    setState(
-      () => _techs = (data['users'] as List)
-          .map((item) => AppUser.fromJson(item))
-          .toList(),
-    );
+    final techs = await _service.users(role: 'technician');
+    setState(() => _techs = techs);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Technicians')),
+      appBar: AppBar(
+        title: const Text('Manage Technicians'),
+        actions: [
+          const NotificationBellButton(color: Colors.white),
+          IconButton(
+            tooltip: 'Add technician',
+            icon: const Icon(Icons.person_add_alt_1),
+            onPressed: _addTechnician,
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView.builder(
@@ -77,14 +82,111 @@ class _ManageTechniciansScreenState extends State<ManageTechniciansScreen> {
     );
   }
 
-  Future<void> _approve(int id, bool approved) async {
+  Future<void> _addTechnician() async {
+    final name = TextEditingController();
+    final email = TextEditingController();
+    final password = TextEditingController();
+    final phone = TextEditingController();
+    final address = TextEditingController();
+    final skills = TextEditingController();
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add technician'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: name,
+                decoration: const InputDecoration(labelText: 'Full name'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: email,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'Email'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: password,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: phone,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Phone'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: address,
+                decoration: const InputDecoration(labelText: 'Address'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: skills,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Skills, for example fridge, cooker, washer',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.person_add_alt_1),
+            label: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+
+    if (saved != true) return;
+    if (name.text.trim().isEmpty ||
+        !email.text.contains('@') ||
+        password.text.length < 6 ||
+        phone.text.trim().isEmpty ||
+        skills.text.trim().isEmpty) {
+      if (mounted) {
+        showToast(
+          context,
+          'Enter name, valid email, 6+ character password, phone and skills.',
+          error: true,
+        );
+      }
+      return;
+    }
+
     try {
-      await ApiService.post('admin/approve_technician.php', {
-        'user_id': id,
-        'approved': approved,
-      });
+      await _service.createTechnicianAccount(
+        name: name.text,
+        email: email.text,
+        password: password.text,
+        phone: phone.text,
+        address: address.text,
+        skills: skills.text,
+      );
       await _load();
-    } on ApiException catch (error) {
+      if (mounted) showToast(context, 'Technician account created.');
+    } on PhpApiException catch (error) {
+      if (mounted) showToast(context, error.message, error: true);
+    }
+  }
+
+  Future<void> _approve(String id, bool approved) async {
+    try {
+      await _service.approveTechnician(id, approved);
+      await _load();
+    } on PhpApiException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     }
   }

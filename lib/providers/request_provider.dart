@@ -2,46 +2,54 @@ import 'package:flutter/foundation.dart';
 
 import '../models/appliance.dart';
 import '../models/repair_request.dart';
-import '../services/api_service.dart';
+import '../services/php_api_service.dart';
 
 class RequestProvider extends ChangeNotifier {
+  final _service = PhpApiService();
+
   bool loading = false;
+  String? errorMessage;
   List<Appliance> appliances = [];
   List<RepairRequest> requests = [];
 
   Future<void> loadAppliances() async {
-    final data = await ApiService.get('appliances.php');
-    appliances = (data['appliances'] as List)
-        .map((item) => Appliance.fromJson(item))
-        .toList();
+    loading = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      appliances = await _service.appliances();
+    } catch (error) {
+      errorMessage = 'Could not load appliances.';
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  void clearError() {
+    errorMessage = null;
     notifyListeners();
   }
 
-  Future<void> loadCustomerRequests(int customerId) async {
+  Future<void> loadCustomerRequests(String customerId) async {
     loading = true;
     notifyListeners();
-    final data = await ApiService.get(
-      'my_requests.php',
-      query: {'customer_id': '$customerId'},
-    );
-    requests = (data['requests'] as List)
-        .map((item) => RepairRequest.fromJson(item))
-        .toList();
-    loading = false;
-    notifyListeners();
+    try {
+      requests = await _service.customerRequests(customerId);
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
   }
 
-  Future<void> loadTechnicianJobs(int technicianId) async {
+  Future<void> loadTechnicianJobs(String technicianId) async {
     loading = true;
     notifyListeners();
-    final data = await ApiService.get(
-      'my_jobs.php',
-      query: {'technician_id': '$technicianId'},
-    );
-    requests = (data['jobs'] as List)
-        .map((item) => RepairRequest.fromJson(item))
-        .toList();
-    loading = false;
-    notifyListeners();
+    try {
+      requests = await _service.technicianJobs(technicianId);
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
   }
 }

@@ -1,6 +1,6 @@
 # Home Fundi
 
-Home Fundi is a Flutter, PHP and MySQL service platform for Tricom Technologies. It supports three roles:
+Home Fundi is a Flutter service marketplace for Tricom Technologies backed by a PHP API and MySQL database. It supports three roles:
 
 - Customer: create, track, cancel and rate appliance repair requests.
 - Technician: view available jobs, accept jobs, update job status and view ratings.
@@ -8,17 +8,23 @@ Home Fundi is a Flutter, PHP and MySQL service platform for Tricom Technologies.
 
 ## Project Layout
 
-- `lib/` - Flutter app source using Material 3, Provider, http and shared_preferences.
-- `api/` - PHP REST API endpoints. Copy this folder to your web server as `home_fundi_api`.
-- `database/home_fundi.sql` - MySQL schema, seed appliances, sample accounts and mock repair data.
-- `docs/SETUP.md` - full setup and testing instructions.
+- `lib/` - Flutter app source using Material 3, Provider, and HTTP API services.
+- `api/` - PHP endpoints for authentication, users, appliances, requests, jobs, ratings and reports.
+- `database/home_fundi.sql` - MySQL schema and seed data.
+- `docs/SETUP.md` - setup and testing instructions.
 
-## Sample Accounts
+## MySQL Data
 
-- Customer: `customer@test.com` / `password123`
-- Technician: `tech@test.com` / `password123` (approved by default)
-- Admin: `admin@test.com` / `admin123`
+The app uses these MySQL tables:
 
-The database seed also includes mock requests across pending, accepted, in-progress, completed and cancelled states.
+- `users`
+- `appliances`
+- `repair_requests`
+- `ratings`
+- `notifications`
 
-Update `lib/utils/constants.dart` to point the Flutter app to your API base URL.
+Run `database/home_fundi.sql` in MySQL to create the database and seed demo accounts, appliances, repair requests, ratings and notifications.
+
+Customers can register themselves from the login screen. Technician accounts are created by admins from the Manage Technicians screen and stored in MySQL through the PHP API.
+
+The Flutter app reads the API base URL from `HOME_FUNDI_API_URL` at build time. If unset, it uses `http://127.0.0.1/Home-Fundi/api`.

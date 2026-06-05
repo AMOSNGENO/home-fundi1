@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../models/appliance.dart';
-import '../../services/api_service.dart';
+import '../../services/php_api_service.dart';
 import '../../utils/helpers.dart';
+import '../../widgets/app_widgets.dart';
 
 class ManageAppliancesScreen extends StatefulWidget {
   const ManageAppliancesScreen({super.key});
@@ -12,6 +13,7 @@ class ManageAppliancesScreen extends StatefulWidget {
 }
 
 class _ManageAppliancesScreenState extends State<ManageAppliancesScreen> {
+  final _service = PhpApiService();
   List<Appliance> _items = [];
 
   @override
@@ -21,12 +23,8 @@ class _ManageAppliancesScreenState extends State<ManageAppliancesScreen> {
   }
 
   Future<void> _load() async {
-    final data = await ApiService.get('appliances.php');
-    setState(
-      () => _items = (data['appliances'] as List)
-          .map((item) => Appliance.fromJson(item))
-          .toList(),
-    );
+    final items = await _service.appliances();
+    setState(() => _items = items);
   }
 
   @override
@@ -35,6 +33,7 @@ class _ManageAppliancesScreenState extends State<ManageAppliancesScreen> {
       appBar: AppBar(
         title: const Text('Manage Appliances'),
         actions: [
+          const NotificationBellButton(color: Colors.white),
           IconButton(
             tooltip: 'Add',
             icon: const Icon(Icons.add),
@@ -118,25 +117,22 @@ class _ManageAppliancesScreenState extends State<ManageAppliancesScreen> {
     if (saved != true) return;
     try {
       final payload = {
-        'id': item?.id,
         'name': name.text,
         'category': category.text,
         'description': description.text,
       };
-      item == null
-          ? await ApiService.post('admin/add_appliance.php', payload)
-          : await ApiService.put('admin/update_appliance.php', payload);
+      await _service.saveAppliance(item, payload);
       await _load();
-    } on ApiException catch (error) {
+    } on PhpApiException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     }
   }
 
-  Future<void> _delete(int id) async {
+  Future<void> _delete(String id) async {
     try {
-      await ApiService.delete('admin/delete_appliance.php', {'id': id});
+      await _service.deleteAppliance(id);
       await _load();
-    } on ApiException catch (error) {
+    } on PhpApiException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     }
   }

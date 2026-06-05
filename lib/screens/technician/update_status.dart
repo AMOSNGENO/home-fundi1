@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/request_provider.dart';
-import '../../services/api_service.dart';
+import '../../services/php_api_service.dart';
 import '../../utils/helpers.dart';
 
 class UpdateStatusScreen extends StatefulWidget {
@@ -14,6 +14,8 @@ class UpdateStatusScreen extends StatefulWidget {
 }
 
 class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
+  final _service = PhpApiService();
+
   @override
   void initState() {
     super.initState();
@@ -71,15 +73,12 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
     );
   }
 
-  Future<void> _update(int id, String status) async {
+  Future<void> _update(String id, String status) async {
     try {
-      await ApiService.post('update_job_status.php', {
-        'request_id': id,
-        'status': status,
-      });
+      await _service.updateJobStatus(id, status);
       await _load();
       if (mounted) showToast(context, 'Status updated.');
-    } on ApiException catch (error) {
+    } on PhpApiException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     }
   }

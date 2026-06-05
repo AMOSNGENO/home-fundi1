@@ -4,9 +4,9 @@ require_once __DIR__ . '/helpers.php';
 try {
     $data = input();
     require_fields($data, ['password']);
-    $identifier = trim((string)($data['login'] ?? $data['email'] ?? $data['username'] ?? ''));
+    $identifier = trim((string)($data['login'] ?? $data['email'] ?? $data['phone'] ?? $data['username'] ?? ''));
     if ($identifier === '') {
-        fail('Email or username is required.', 400);
+        fail('Email, phone, or username is required.', 400);
     }
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     $windowStart = (new DateTimeImmutable('-15 minutes'))->format('Y-m-d H:i:s');
@@ -16,8 +16,8 @@ try {
         fail('Too many login attempts. Try again later.', 429);
     }
 
-    $stmt = db()->prepare('SELECT * FROM users WHERE email = ? OR name = ? LIMIT 1');
-    $stmt->execute([$identifier, $identifier]);
+    $stmt = db()->prepare('SELECT * FROM users WHERE email = ? OR phone = ? OR name = ? LIMIT 1');
+    $stmt->execute([$identifier, $identifier, $identifier]);
     $user = $stmt->fetch();
     $valid = $user && password_verify($data['password'], $user['password']);
     $legacySeedValid = $user && hash_equals($user['password'], hash('sha256', $data['password']));

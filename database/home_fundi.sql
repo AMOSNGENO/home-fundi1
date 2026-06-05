@@ -27,6 +27,17 @@ CREATE TABLE login_attempts (
     INDEX idx_login_attempts_window (identifier, ip_address, attempted_at)
 );
 
+CREATE TABLE password_reset_tokens (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    token_hash VARCHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_password_reset_user (user_id),
+    INDEX idx_password_reset_expires (expires_at)
+);
+
 CREATE TABLE appliances (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
@@ -50,6 +61,7 @@ CREATE TABLE repair_requests (
     status ENUM('pending', 'accepted', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
     estimated_cost DECIMAL(10,2),
     actual_cost DECIMAL(10,2),
+    request_image_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP NULL,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -79,6 +91,22 @@ CREATE TABLE notifications (
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE chat_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    repair_request_id INT NULL,
+    sender_id INT NOT NULL,
+    recipient_id INT NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (repair_request_id) REFERENCES repair_requests(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_chat_request (repair_request_id),
+    INDEX idx_chat_users (sender_id, recipient_id),
+    INDEX idx_chat_recipient_read (recipient_id, is_read)
 );
 
 INSERT INTO users (name, email, password, phone, address, role, is_approved, api_token) VALUES
