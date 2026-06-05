@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../services/php_api_service.dart';
+import '../technician/chat_room.dart';
 import '../../utils/constants.dart';
 import '../../utils/helpers.dart';
 import '../../widgets/app_widgets.dart';
@@ -86,6 +87,23 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                     ),
                     title: Text(request.technicianName!),
                     subtitle: const Text('Assigned technician'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      onPressed: request.technicianId == null || request.technicianId!.isEmpty
+                          ? null
+                          : () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChatRoomScreen(
+                                    title: request.technicianName!,
+                                    subtitle: request.applianceName,
+                                    requestId: request.id,
+                                    recipientId: request.technicianId!,
+                                  ),
+                                ),
+                              );
+                            },
+                    ),
                   ),
                 ],
                 const SizedBox(height: 24),
