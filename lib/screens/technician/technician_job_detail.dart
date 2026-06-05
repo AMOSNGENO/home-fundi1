@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/repair_request.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/php_api_service.dart';
+import '../../services/firebase_service.dart';
 import '../../utils/helpers.dart';
 import 'chat_room.dart';
 
@@ -25,7 +25,7 @@ class TechnicianJobDetailScreen extends StatefulWidget {
 }
 
 class _TechnicianJobDetailScreenState extends State<TechnicianJobDetailScreen> {
-  final _service = PhpApiService();
+  final _service = FirebaseService();
   late RepairRequest _job = widget.job;
   bool _busy = false;
 
@@ -55,8 +55,8 @@ class _TechnicianJobDetailScreenState extends State<TechnicianJobDetailScreen> {
               child: _hasLocation
                   ? FlutterMap(
                       options: MapOptions(
-                        initialCenter: position,
-                        initialZoom: 15,
+                        center: position,
+                        zoom: 15,
                       ),
                       children: [
                         TileLayer(
@@ -94,18 +94,6 @@ class _TechnicianJobDetailScreenState extends State<TechnicianJobDetailScreen> {
             title: readableStatus(_job.status),
             subtitle: _job.description,
           ),
-          if (_job.requestImageUrl != null && _job.requestImageUrl!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                PhpApiService.mediaUrl(_job.requestImageUrl),
-                height: 190,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ],
           _InfoTile(
             icon: Icons.person_outline,
             title: _job.customerName,
@@ -129,7 +117,7 @@ class _TechnicianJobDetailScreenState extends State<TechnicianJobDetailScreen> {
               if (_job.preferredDate != null) _job.preferredDate,
               if (_job.preferredTime != null) _job.preferredTime,
             ].whereType<String>().join(' - '),
-            subtitle: 'Quoted ${money(_job.estimatedCost ?? 0)}',
+            subtitle: 'Estimated ${money(_job.estimatedCost ?? 0)}',
           ),
           const SizedBox(height: 10),
           if (_canAccept)
@@ -140,7 +128,7 @@ class _TechnicianJobDetailScreenState extends State<TechnicianJobDetailScreen> {
             ),
           if (_canUpdate)
             DropdownButtonFormField<String>(
-              value: _job.status,
+              initialValue: _job.status,
               decoration: const InputDecoration(labelText: 'Update status'),
               items: const [
                 DropdownMenuItem(value: 'accepted', child: Text('Accepted')),
@@ -199,12 +187,11 @@ class _TechnicianJobDetailScreenState extends State<TechnicianJobDetailScreen> {
           status: 'accepted',
           estimatedCost: _job.estimatedCost,
           actualCost: _job.actualCost,
-          requestImageUrl: _job.requestImageUrl,
           createdAt: _job.createdAt,
           completedAt: _job.completedAt,
         );
       });
-    } on PhpApiException catch (error) {
+    } on FirebaseServiceException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -238,14 +225,13 @@ class _TechnicianJobDetailScreenState extends State<TechnicianJobDetailScreen> {
           status: status,
           estimatedCost: _job.estimatedCost,
           actualCost: _job.actualCost,
-          requestImageUrl: _job.requestImageUrl,
           createdAt: _job.createdAt,
           completedAt: status == 'completed'
               ? DateTime.now().toIso8601String()
               : _job.completedAt,
         );
       });
-    } on PhpApiException catch (error) {
+    } on FirebaseServiceException catch (error) {
       if (mounted) showToast(context, error.message, error: true);
     } finally {
       if (mounted) setState(() => _busy = false);
