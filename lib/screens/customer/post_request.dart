@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/appliance.dart';
@@ -29,7 +29,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
   final _picker = ImagePicker();
   DateTime? _date;
   Appliance? _appliance;
-  LatLng? _location;
+  google_maps_flutter.LatLng? _location;
   String? _locationName;
   Uint8List? _productImageBytes;
   String? _productImageName;

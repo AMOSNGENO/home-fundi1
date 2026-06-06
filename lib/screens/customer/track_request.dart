@@ -114,11 +114,11 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                       borderRadius: BorderRadius.circular(8),
                       child: FlutterMap(
                         options: MapOptions(
-                          center: LatLng(
+                          initialCenter: LatLng(
                             request.latitude!,
                             request.longitude!,
                           ),
-                          zoom: 15,
+                          initialZoom: 15,
                         ),
                         children: [
                           TileLayer(

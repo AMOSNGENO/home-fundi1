@@ -55,8 +55,8 @@ class _TechnicianJobDetailScreenState extends State<TechnicianJobDetailScreen> {
               child: _hasLocation
                   ? FlutterMap(
                       options: MapOptions(
-                        center: position,
-                        zoom: 15,
+                        initialCenter: position,
+                        initialZoom: 15,
                       ),
                       children: [
                         TileLayer(
