@@ -29,7 +29,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
   final _picker = ImagePicker();
   DateTime? _date;
   Appliance? _appliance;
-  google_maps_flutter.LatLng? _location;
+  LatLng? _location;
   String? _locationName;
   Uint8List? _productImageBytes;
   String? _productImageName;
