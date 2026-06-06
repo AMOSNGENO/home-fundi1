@@ -1,9 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'package:latlong2/latlong.dart';
 
 const _googleMapsApiKey = String.fromEnvironment(
   'GOOGLE_MAPS_API_KEY',
@@ -33,7 +32,6 @@ class LocationPickerScreen extends StatefulWidget {
 
 class _LocationPickerScreenState extends State<LocationPickerScreen> {
   final _search = TextEditingController();
-  final _mapController = MapController();
   late LatLng _selected;
   String _address = '';
   bool _resolving = false;
@@ -71,33 +69,23 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       ),
       body: Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _selected,
-              initialZoom: 15,
-              onTap: (_, point) => _selectPoint(point),
+          GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: _selected,
+              zoom: 15,
             ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.tricomtechnologies.home_fundi',
+            mapType: MapType.hybrid,
+            myLocationButtonEnabled: true,
+            zoomControlsEnabled: true,
+            markers: {
+              Marker(
+                markerId: const MarkerId('selected_location'),
+                position: _selected,
+                draggable: true,
+                onDragEnd: _selectPoint,
               ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: _selected,
-                    width: 44,
-                    height: 44,
-                    child: const Icon(
-                      Icons.location_pin,
-                      color: Color(0xFFFF2E2E),
-                      size: 42,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            },
+            onTap: _selectPoint,
           ),
           Positioned(
             left: 12,
@@ -184,7 +172,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         _selected = result.point;
         _address = result.address;
         _search.text = result.address;
-        _mapController.move(result.point, 15);
       });
     } catch (_) {
       if (mounted) _showLocationError();
@@ -221,7 +208,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     if (_googleMapsApiKey == 'YOUR_GOOGLE_MAPS_API_KEY') return null;
     final queryParameters = <String, String>{
       'key': _googleMapsApiKey,
-      if (address != null) 'address': address,
+      if (address != null && address.isNotEmpty) 'address': address,
       if (point != null) 'latlng': '${point.latitude},${point.longitude}',
     };
     final uri = Uri.https(
