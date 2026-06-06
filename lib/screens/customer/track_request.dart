@@ -107,6 +107,32 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                   ),
                 ],
                 const SizedBox(height: 24),
+                // Debug: Show coordinates
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Debug: Coordinates',
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                      Text(
+                        'Latitude: ${request.latitude}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      Text(
+                        'Longitude: ${request.longitude}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
                 if (request.latitude != null && request.longitude != null) ...[
                   SizedBox(
                     height: 220,
@@ -146,6 +172,28 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ] else ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, color: Colors.orange),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'No location coordinates for this request.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 24),
